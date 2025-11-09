@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+venv/
+env/
+.ss_planner_env/
+*.env/
+*.venv/
+*.egg/
+
+# Environment files
+.env
+.env.*
+!example.env
+
+# Django / Flask
+db.sqlite3
+*.log
+
+# System
+.DS_Store
+.idea/
+.vscode/
+
+# Credentials and secrets
+client_secret.json
+
+# Node / React build (if any frontend)
+node_modules/
+build/
+dist/
+
+# Misc
+*.bak
+*.swp
