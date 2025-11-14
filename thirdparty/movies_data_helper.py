@@ -105,7 +105,7 @@ def search_movies(title=None, genre=None, country="IN", language="hi",
     )
     return results[:limit]
 
-@tool
+
 def get_movies_for_user(user_id, title=None, genre=None, country="IN", language="hi",
      year_from=None, year_until=None, limit=10):
     """
@@ -138,7 +138,7 @@ def get_movies_for_user(user_id, title=None, genre=None, country="IN", language=
                 - "poster_url" (list[str]): List of poster images url
                 - "backdrop_url" (list[str]): List of backdrop images url
     """
-    watched_ids = set(UserContent.objects.filter(user_id=user_id)
+    watched_ids = set(UserContent.objects.filter(user_id=user_id, watched=True)
         .values_list('content__imdbId', flat=True))
     batch_limit = limit * 3
     candidates = search_movies(title, genre, country, language, year_from, 
@@ -154,6 +154,7 @@ def get_movies_for_user(user_id, title=None, genre=None, country="IN", language=
             break
         unwatched.extend(new_unwatched)
     result = unwatched[:limit]
+    print("RESULT",len(result))
     crt_contents = {}
     qry = Content.objects.filter(justwatchId__in=[c['id'] for c in result])
     existing_ids = set(qry.values_list('justwatchId', flat=True))
@@ -177,12 +178,22 @@ def get_movies_for_user(user_id, title=None, genre=None, country="IN", language=
             backdropUrl=content.get("backdropUrl", [])
         )
     res = Content.objects.bulk_create(crt_contents.values(), batch_size=500)
-    crt_usr_cnt = []
-    final_res = list(res) + list(qry)
-    for r in final_res:
-        crt_usr_cnt.append(UserContent(user_id = user_id, content_id = r.id))
-    final_res = UserContent.objects.bulk_create(crt_usr_cnt, batch_size=500, ignore_conflicts=True)
-    final_res = [obj for obj in final_res if obj.id is not None]
+    all_content = list(res) + list(qry)
+    print("ALL", len(all_content))
+    user_content_payload = [
+        UserContent(user_id=user_id, content_id=c.id)
+        for c in all_content
+    ]
+    UserContent.objects.bulk_create(
+        user_content_payload,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+    cnt_ids = [c.id for c in all_content]
+    final_res = UserContent.objects.filter(
+        user_id=user_id,
+        content_id__in=cnt_ids
+    )
     return final_res
 
 def get_movie_details(movie_id):

@@ -28,7 +28,7 @@ class Content(models.Model):
     content_type = models.IntegerField(choices=ContentType.choices, default=ContentType.MOVIE)
     imdbId = models.CharField(max_length=20, null=True, blank=True)
     tmdbId = models.CharField(max_length=20, null=True, blank=True)
-    justwatchId = models.CharField(max_length=20, null=True, blank=True)
+    justwatchId = models.CharField(max_length=20, null=True, blank=True, unique=True)
     genres = models.JSONField(default=list, blank=True)
     posterUrl = models.CharField(max_length=500, null=True, blank=True)
     backdropUrl = ArrayField(
