@@ -167,18 +167,18 @@ class SSRecommander():
         limit = max(int(kwargs.get("limit", 10)), 1)
         if not query or not isinstance(query, str):
             return {'code': 400, 'message': 'Invalid input provided'}, 200
-        # resp, status = self.yt_data_helper.get_user_yt_data(user)
-        # if not status:
-        #     return {"code": 400, "message": resp.get('message')}, 200
-        # usr_cnt_data = self._build_user_feedback_data(user)
-        # resp, status = self.movie_data_helper.get_movie_suggesstion(
-        #     user, resp, usr_cnt_data, query, limit)
-        # if not status:
-        #     return {"code": 400, "message": resp.get('message')}, 200
-        # if len(resp) == 0:
-        resp, status = self.get_usr_contents(user, limit, query, False)
+        resp, status = self.yt_data_helper.get_user_yt_data(user)
         if not status:
             return {"code": 400, "message": resp.get('message')}, 200
+        usr_cnt_data = self._build_user_feedback_data(user)
+        resp, status = self.movie_data_helper.get_movie_suggesstion(
+            user, resp, usr_cnt_data, query, limit)
+        if not status:
+            return {"code": 400, "message": resp.get('message')}, 200
+        if len(resp) == 0:
+            resp, status = self.get_usr_contents(user, limit, query, False)
+            if not status:
+                return {"code": 400, "message": resp.get('message')}, 200
         return {"code": 0, "data": resp}, 200
 
     def update_usr_cnt_feedback(self, id, **kwargs):

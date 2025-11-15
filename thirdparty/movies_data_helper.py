@@ -154,7 +154,6 @@ def get_movies_for_user(user_id, title=None, genre=None, country="IN", language=
             break
         unwatched.extend(new_unwatched)
     result = unwatched[:limit]
-    print("RESULT",len(result))
     crt_contents = {}
     qry = Content.objects.filter(justwatchId__in=[c['id'] for c in result])
     existing_ids = set(qry.values_list('justwatchId', flat=True))
@@ -179,7 +178,6 @@ def get_movies_for_user(user_id, title=None, genre=None, country="IN", language=
         )
     res = Content.objects.bulk_create(crt_contents.values(), batch_size=500)
     all_content = list(res) + list(qry)
-    print("ALL", len(all_content))
     user_content_payload = [
         UserContent(user_id=user_id, content_id=c.id)
         for c in all_content
