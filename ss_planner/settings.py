@@ -36,7 +36,11 @@ SECRET_KEY = 'django-insecure-6j##67v8gb5)m5p)zf-)dasa&x6^ebc_@(qom6bpf!@cf^_skw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "ss-api-ajuf.onrender.com",
+    "localhost",
+    "127.0.0.1"
+    ]
 
 
 # Application definition
@@ -67,15 +71,24 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'ss_planner.urls'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # your React dev server
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
+    "https://ss-api-ajuf.onrender.com"
 ]
-
-CORS_ALLOW_CREDENTIALS = True
 
 TEMPLATES = [
     {
