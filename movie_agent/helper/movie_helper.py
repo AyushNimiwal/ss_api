@@ -28,7 +28,7 @@ DEFAULT_TOOL_ARGS = {
 class MovieDataHelper:
 
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4.1", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-4.1", temperature=0.7)
 
     def _extract_json(self, text: str) -> Dict[str, Any] | None:
         try:
