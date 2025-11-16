@@ -40,32 +40,54 @@ class GoogleAuthUtils():
         return auth_url, state
     
     def exchange_code_for_tokens(self, code, redirect_uri=None):
-        """Exchange auth code for credentials."""
+        """Exchange Google OAuth code -> Google tokens + create user."""
+
+        if not redirect_uri:
+            redirect_uri = settings.YT_OAUTH_REDIRECT_URI
+
+        # 1. Build OAuth flow
         flow = self.get_oauth_flow(redirect_uri)
+
+        # 2. Exchange code for Google tokens
         try:
             flow.fetch_token(code=code)
         except Exception as e:
-            print("Error fetching token:", e)
-            return None
+            print("OAuth Token Error:", e)
+            return {"code": 400, "message": "Failed to fetch Google tokens"}, 400
+
         creds = flow.credentials
-        oauth2_client = build("oauth2", "v2", credentials=creds)
-        user_info = oauth2_client.userinfo().get().execute()
+
+        # 3. Fetch Google profile info
+        try:
+            oauth2_client = build("oauth2", "v2", credentials=creds)
+            user_info = oauth2_client.userinfo().get().execute()
+        except Exception as e:
+            print("User info error:", e)
+            return {"code": 400, "message": "Failed to fetch Google user info"}, 400
+
+        email = user_info["email"]
+        username = user_info.get("name") or email
+
+        # 4. Create or get local user
         user, _ = self.user_du.get_or_create_user(
-            email=user_info["email"],
-            defaults={"username": user_info.get("name") or user_info["email"]}
+            email=email,
+            defaults={"username": username}
         )
 
+        # 5. Google refresh-token logic
+        google_refresh_token = creds.refresh_token
+
+        # If Google didn't send refresh_token (common), reuse stored one
         existing_creds = self.yt_cred_du.get_yt_credential(user=user)
-        refresh_token = getattr(creds, "refresh_token", None)
-        if not refresh_token and existing_creds:
-            refresh_token = existing_creds.refresh_token
+        if not google_refresh_token and existing_creds:
+            google_refresh_token = existing_creds.refresh_token
 
-
+        # 6. Save Google OAuth tokens in DB
         self.yt_cred_du.update_or_create_yt_credential(
             user=user,
             defaults={
                 "access_token": creds.token,
-                "refresh_token": refresh_token,
+                "refresh_token": google_refresh_token,
                 "token_uri": creds.token_uri,
                 "client_id": creds.client_id,
                 "client_secret": creds.client_secret,
@@ -74,18 +96,20 @@ class GoogleAuthUtils():
             }
         )
 
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+        # 7. Create JWT tokens for frontend login
+        jwt_refresh = RefreshToken.for_user(user)
+        jwt_access = str(jwt_refresh.access_token)
 
         data = {
-            "user_email": user.email,
+            "email": user.email,
             "username": user.username,
-            "access_token": access_token,
-            "refresh_token": refresh_token
+            "jwt_access_token": jwt_access,
+            "jwt_refresh_token": str(jwt_refresh),
+            "google_access_token": creds.token,
+            "google_refresh_token": google_refresh_token,
         }
-        return {"code": 0, "data": data}, 200
 
+        return {"code": 0, "data": data}, 200
 
 class SSRecommander():
     yt_data_helper = YoutubeDataHelper()

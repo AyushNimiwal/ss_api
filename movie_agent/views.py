@@ -1,4 +1,5 @@
 import requests
+from django.conf import settings
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from .utils import SSRecommander, GoogleAuthUtils
@@ -66,26 +67,28 @@ class GoogleAuthViewSet(ViewSet):
     def google_callback(self, request):
         code = request.GET.get("code")
         if not code:
-            return Response({"code":400, "message": "Missing code"}, status=200)
+            return Response({"code": 400, "message": "Missing code"})
+
         try:
-            response = requests.post(
-                "https://ss-api-ajuf.onrender.com/google/exchange",
-                json={"code": code, "redirect_uri": "https://ss-api-ajuf.onrender.com/ssplanner/oauth2callback/"},
-                cookies=request.COOKIES,
-            )
+            redirect_uri = settings.YT_OAUTH_REDIRECT_URI
 
-            data = response.json()
+            res, status = self.google_auth_utils.exchange_code_for_tokens(code, redirect_uri)
 
-            if response.status_code == 200 and data.get("data"):
-                access_token = data["data"]["access_token"]
-                refresh_token = data["data"]["refresh_token"]
-                print(refresh_token)
-                # Redirect user to React app with tokens
-                return redirect(f"https://sspui.netlify.app/movies?auth=success&access={access_token}&refresh={refresh_token}")
+            if status == 200 and res.get("data"):
+                # Clean JWT names
+                jwt_access = res["data"]["jwt_access_token"]
+                jwt_refresh = res["data"]["jwt_refresh_token"]
 
-            return Response({"code":400, "message": "Token exchange failed"}, status=200)
+                # Redirect to frontend with JWTs
+                return redirect(
+                    f"https://sspui.netlify.app/movies"
+                    f"?auth=success&access={jwt_access}&refresh={jwt_refresh}"
+                )
+
+            return Response({"code": 400, "message": "Token exchange failed"})
 
         except Exception as e:
-            return Response({"code":400, "message": str(e)}, status=200)
+            return Response({"code": 400, "message": str(e)})
+
             
     
