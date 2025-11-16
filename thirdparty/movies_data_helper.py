@@ -105,8 +105,8 @@ def search_movies(title=None, genre=None, country="IN", language="hi",
             "posterUrl": poster_url,
             "backdropUrl": backdrop_urls
         })
-    random_pool = weighted_shuffle(results[: limit * 3])
-    return random_pool[:limit]
+    results = weighted_shuffle(results[: limit * 3])
+    return results[:limit]
 
 
 def get_movies_for_user(user_id, title=None, genre=None, country="IN", language="hi",

@@ -56,14 +56,31 @@ Use only for:
 
 
 
-SHARED_USR_REQUEST_PROMPT = """
-USER_REQUEST:
+SHARED_USR_REQUEST_PROMPT = """USER_REQUEST:
 {req}
 
-Treat as:
-- hard filter if explicit
-- strong preference if vague
-""".strip()
+Interpret the user's text as STRICT search filters:
+
+Rules:
+1. If the request contains ANY descriptive word (e.g., funny, dark, thriller, romantic, adventure),
+   map the word to BOTH:
+   - title search ("searchQuery")
+   - genre search (map using GENRE_MAPPING)
+
+2. If the user mentions a year (e.g., 2020, 2018, 90s):
+   - Set year_from and year_until equal to that year
+   - If a range (e.g., 2010-2015), set year_from=2010, year_until=2015
+
+3. If user mentions time periods ("recent", "new", "latest"):
+   - Prefer recent release dates (last 2 years)
+
+4. If multiple genres are implicitly suggested, include ALL as a list.
+
+5. DO NOT ignore user query. Always map it into title or genre or both. 
+   If unclear → put it in title search.
+
+6. If conflicting, user request is a HARD FILTER.
+"""
 
 
 TOOL_SCHEMA = """
