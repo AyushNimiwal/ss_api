@@ -1,4 +1,5 @@
 import requests
+import random
 from datetime import datetime, timedelta
 from .app_constants import SEARCH_TITLES_QUERY, DETAILS_QUERY, SEARCH_RELEASE_QUERY
 from movie_agent.models import UserContent, Content
@@ -38,6 +39,13 @@ def _post(query, variables):
         print(resp.text[:500])
         return None
 
+def weighted_shuffle(items):
+    # More recently released items get slightly higher weight
+    def weight(i):
+        rd = i.get("release_date") or "1900-01-01"
+        return datetime.strptime(rd, "%Y-%m-%d").timestamp()
+
+    return sorted(items, key=lambda x: weight(x) + random.random() * 1e12, reverse=True)
 
 def search_movies(title=None, genre=None, country="IN", language="hi", 
     year_from=None, year_until=None, limit=10):
@@ -53,7 +61,7 @@ def search_movies(title=None, genre=None, country="IN", language="hi",
         "searchTitlesFilter": filter_dict,
         "country": country,
         "language": language,
-        "first": limit,
+        "first": max(30, limit),
         "sortBy": "POPULAR"
     }
     data = _post(SEARCH_TITLES_QUERY, variables)
@@ -97,12 +105,8 @@ def search_movies(title=None, genre=None, country="IN", language="hi",
             "posterUrl": poster_url,
             "backdropUrl": backdrop_urls
         })
-    results.sort(
-        key=lambda x: datetime.strptime(
-            x.get("release_date", "1900-01-01"), "%Y-%m-%d"),
-        reverse=True
-    )
-    return results[:limit]
+    random_pool = weighted_shuffle(results[: limit * 3])
+    return random_pool[:limit]
 
 
 def get_movies_for_user(user_id, title=None, genre=None, country="IN", language="hi",
@@ -152,7 +156,8 @@ def get_movies_for_user(user_id, title=None, genre=None, country="IN", language=
         if not new_unwatched:
             break
         unwatched.extend(new_unwatched)
-    result = unwatched[:limit]
+    random_pool = weighted_shuffle(unwatched[: limit * 3])
+    result = random_pool[:limit]
     crt_contents = {}
     qry = Content.objects.filter(justwatchId__in=[c['id'] for c in result])
     existing_ids = set(qry.values_list('justwatchId', flat=True))

@@ -8,7 +8,7 @@ class GeminiLightClient:
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
         self.session = requests.Session()
 
-    def generate(self, prompt, temperature=0.2):
+    def generate(self, prompt, temperature=0.9):
         body = {
             "contents": [
                 {"parts": [{"text": prompt}]}
