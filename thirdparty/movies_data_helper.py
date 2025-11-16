@@ -1,6 +1,5 @@
 import requests
 from datetime import datetime, timedelta
-from langchain_core.tools import tool
 from .app_constants import SEARCH_TITLES_QUERY, DETAILS_QUERY, SEARCH_RELEASE_QUERY
 from movie_agent.models import UserContent, Content
 from movie_agent.app_settings import ContentType

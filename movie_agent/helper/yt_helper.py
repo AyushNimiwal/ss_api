@@ -13,7 +13,7 @@ class YoutubeDataHelper():
     def __init__(self):
         self.yt_creds_du = YouTubeCredentialDataUtils()
         self.yt_manager = YTManager()
-        self.ai_model_provider = AIModelProvider(model="gemini-2.5-pro", temperature=1)
+        self.ai_model_provider = AIModelProvider(model="gemini-2.5-flash", temperature=1)
 
     def get_yt_creds(self, user):
         yt_cred = self.yt_creds_du.get_yt_credential(user=user)
