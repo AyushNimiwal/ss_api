@@ -13,7 +13,7 @@ class YoutubeDataHelper():
     def __init__(self):
         self.yt_creds_du = YouTubeCredentialDataUtils()
         self.yt_manager = YTManager()
-        self.ai_model_provider = AIModelProvider()
+        self.ai_model_provider = AIModelProvider(model="gemini-2.5-pro", temperature=1)
 
     def get_yt_creds(self, user):
         yt_cred = self.yt_creds_du.get_yt_credential(user=user)
@@ -79,7 +79,7 @@ class YoutubeDataHelper():
             {"role": "system", "content": "You are a movie recommendation assistant."},
             {"role": "user", "content": prompt}
         ]
-        res, status = self.ai_model_provider.get_ai_response("gpt-4o-mini", messages, 0.7)
+        res, status = self.ai_model_provider.get_ai_response(messages)
         if not status:
             return res, False
         return res, True

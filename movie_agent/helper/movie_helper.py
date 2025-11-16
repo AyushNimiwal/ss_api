@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from django.forms.models import model_to_dict
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from thirdparty.movies_data_helper import get_movies_for_user
 from thirdparty.app_constants import GENRE_MAPPING
@@ -28,9 +28,10 @@ DEFAULT_TOOL_ARGS = {
 class MovieDataHelper:
 
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4.1", temperature=0.7)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7)
 
     def _extract_json(self, text: str) -> Dict[str, Any] | None:
+        text = text.strip().strip("```json").strip("```")
         try:
             return json.loads(text)
         except:

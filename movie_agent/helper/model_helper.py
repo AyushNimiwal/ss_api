@@ -1,21 +1,35 @@
-from openai import OpenAI
-import json
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import SystemMessage, HumanMessage
 
-class AIModelProvider():
+class AIModelProvider:
 
-    def __init__(self):
-        self.client = OpenAI()
+    def __init__(self, model="gemini-2.5-pro", temperature=0):
+        # LangChain Gemini client
+        self.client = ChatGoogleGenerativeAI(
+            model=model,   # or gemini-1.5-flash
+            temperature=temperature
+        )
 
-    
-    def get_ai_response(self, model, messages, temperature=0):
+    def get_ai_response(self, messages):
         try:
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=temperature
-            )
-            content = response.choices[0].message.content
-            return content, True
+            # Convert your OpenAI-style messages into LangChain messages
+            lc_messages = []
+            for m in messages:
+                if m["role"] == "system":
+                    lc_messages.append(SystemMessage(content=m["content"]))
+                elif m["role"] == "user":
+                    lc_messages.append(HumanMessage(content=m["content"]))
+
+            # Invoke Gemini through LangChain
+            response = self.client.invoke(lc_messages)
+
+            text = response.content.strip()
+
+            if "```" in text:
+                text = text.replace("```json", "").replace("```", "").strip()
+
+            return text, True
+
         except Exception as e:
             return {"error": str(e)}, False
