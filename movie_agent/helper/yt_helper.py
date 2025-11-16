@@ -1,4 +1,3 @@
-from movie_agent.models import YouTubeCredential
 from movie_agent.data_utils import YouTubeCredentialDataUtils
 from thirdparty.youtube_data_helper import YTManager
 from .model_helper import AIModelProvider
@@ -13,7 +12,7 @@ class YoutubeDataHelper():
     def __init__(self):
         self.yt_creds_du = YouTubeCredentialDataUtils()
         self.yt_manager = YTManager()
-        self.ai_model_provider = AIModelProvider(model="gemini-2.5-flash", temperature=1)
+        self.ai_model_provider = AIModelProvider()
 
     def get_yt_creds(self, user):
         yt_cred = self.yt_creds_du.get_yt_credential(user=user)
@@ -50,7 +49,7 @@ class YoutubeDataHelper():
         subs_str = ""
         for subscription in subs:
             channel_title = subscription['snippet']['title']
-            channel_description = subscription['snippet']['description']
+            channel_description = subscription['snippet']['description'][:150]
             subs_str += "\n".join(
                 f"Title: {channel_title} | Description: {channel_description}")
         resp, status = self.analyse_and_extract_facts_from_data(user, subs_str)

@@ -1,102 +1,90 @@
 SUGGESSTION_THROUGH_YT_DATA = """
-You are a recommendation engine specialized in selecting movies/shows that fit a user's taste.
+You are a movie recommendation engine.
 
-Follow these steps strictly:
+INPUT:
+- yt: User's YouTube tastes (summary text below)
+- hist: User watch history (optional JSON)
+- req: User request (optional text)
+- limit: {limit}
+- GENRE_MAPPING: {genre_map}
 
-STEP 1 — Analyze the user's YouTube data below:
-- Identify favored genres, languages, creators, tone (dark/wholesome), pacing, topic categories, and complexity.
-- Extract only the patterns that help predict viewing taste.
+TASK:
+1. Infer top user preferences from `yt`:
+   - topics, pacing, tone, creator types
+   - likely movie genres (use GENRE_MAPPING keys only)
+
+2. Produce a TOOL_QUERY JSON:
+   Required keys:
+   {{
+     "title": string|null,
+     "genre": [code, code]|null,
+     "country": "IN",
+     "language": "hi",
+     "year_from": int|null,
+     "year_until": int|null,
+     "limit": {limit}
+   }}
+   Rules:
+   - Use <=2 genre codes
+   - Use GENRE_MAPPING codes only
+   - No additional keys
+   - Do NOT include user_id
+
+3. Re-rank results conceptually using:
+   - `hist` (avoid watched items)
+   - `req` (filter/strong preference)
+   - inferred taste
+
+OUTPUT:
+Return ONLY valid JSON for TOOL_QUERY.
 
 USER YOUTUBE DATA:
-{}
+{yt_data}
 
-STEP 2 — Construct the ideal tool-query payload needed to fetch candidate items.
-Use TOOL_SCHEMA to generate the exact JSON arguments required by the tool.
-This JSON MUST respect GENRE_MAPPING and MUST NOT include user_id.
-
-STEP 3 — Assume the tool fetches multiple candidate movies/shows.
-Re-rank and filter these candidates based on:
-- inferred user taste,
-- user watch history (if provided),
-- user special request (if provided),
-- match strength, uniqueness, and freshness.
-
-STEP 4 — Return the FINAL LIST of movies/shows.
-
-FINAL OUTPUT RULES:
-- Output ONLY one JSON array (e.g. `[{{...}}, {{...}}]`).
-- No markdown, no commentary, no text besides the JSON array.
-- Use at most TWO genres per item.
-- Genres MUST be short codes from GENRE_MAPPING.
-- Avoid titles already watched by the user.
-- Must return EXACTLY `limit` items unless explicitly impossible.
-- If nothing matches, return `[]`.
-
-GENRE_MAPPING:
-{}
-
-`limit` value:
-{}
 """.strip()
 
 
 SHARED_USR_CNT_DATA_PROMPT = """
-USER WATCH HISTORY (recent movies/shows):
-{}
+WATCH_HISTORY (JSON):
+{hist}
 
-Each item contains: title, genre codes, description, release year, rating, feedback, watch count.
-
-Use this data to:
-- Understand deeper patterns of taste (genre blends, tone, pacing, themes).
-- Avoid duplicates of anything the user already watched.
-- Improve re-ranking of tool results.
+Use only for:
+- avoiding watched titles
+- refining inferred preferences
+- re-ranking relevance
 """.strip()
 
 
+
 SHARED_USR_REQUEST_PROMPT = """
-USER SPECIAL REQUEST:
-{}
+USER_REQUEST:
+{req}
 
-Interpret this as:
-- A hard filter (if explicitly stated), OR
-- A strong preference (if vague).
-
-Incorporate this request into both tool-query generation AND final ranking.
+Treat as:
+- hard filter if explicit
+- strong preference if vague
 """.strip()
 
 
 TOOL_SCHEMA = """
-TOOL_SCHEMA:
-You MUST output ONLY a valid JSON object that matches this structure exactly.
-This JSON is used to call the function:
-
-get_movies_for_user(
-    user_id: int,
-    title: str | None,
-    genre: list[str] | None,
-    country: str = "IN",
-    language: str = "hi",
-    year_from: int | None,
-    year_until: int | None,
-    limit: int = 10
-)
-
-REQUIRED JSON FORMAT:
+TOOL_QUERY FORMAT (return ONLY this JSON):
 {
-    "title": "string or null",
-    "genre": ["act","drm"] or null,       // short genre codes ONLY; max 2
+  "title": string|null,
+  "genre": [str,str]|null,
+  "country": "IN",
+  "language": "hi",
+  "year_from": int|null,
+  "year_until": int|null,
+  "limit": LIMIT
+}
+""".strip()
+
+DEFAULT_TOOL_ARGS = {
+    "title": None,
+    "genre": None,
     "country": "IN",
     "language": "hi",
-    "year_from": 2015 or null,
-    "year_until": 2024 or null,
-    "limit": 10
+    "year_from": None,
+    "year_until": None,
+    "limit": 10,
 }
-
-STRICT RULES:
-1. DO NOT include `"user_id"` in your JSON — we add it separately.
-2. MUST return valid JSON only — no explanation, no markdown.
-3. ALL keys required; use null where unknown.
-4. `genre` must use short codes from GENRE_MAPPING.
-5. `limit` MUST NOT exceed the global `limit` in the system prompt.
-6. No additional fields besides the keys shown above.
-""".strip()
