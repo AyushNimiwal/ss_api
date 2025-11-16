@@ -69,8 +69,8 @@ class GoogleAuthViewSet(ViewSet):
             return Response({"code":400, "message": "Missing code"}, status=200)
         try:
             response = requests.post(
-                "http://localhost:8000/google/exchange",
-                json={"code": code, "redirect_uri": "http://127.0.0.1:8000/ssplanner/oauth2callback/"},
+                "https://ss-api-ajuf.onrender.com/google/exchange",
+                json={"code": code, "redirect_uri": "https://ss-api-ajuf.onrender.com/ssplanner/oauth2callback/"},
                 cookies=request.COOKIES,
             )
 
@@ -81,7 +81,7 @@ class GoogleAuthViewSet(ViewSet):
                 refresh_token = data["data"]["refresh_token"]
                 print(refresh_token)
                 # Redirect user to React app with tokens
-                return redirect(f"http://localhost:5173/movies?auth=success&access={access_token}&refresh={refresh_token}")
+                return redirect(f"https://sspui.netlify.app/movies?auth=success&access={access_token}&refresh={refresh_token}")
 
             return Response({"code":400, "message": "Token exchange failed"}, status=200)
 
