@@ -55,7 +55,7 @@ class MovieDataHelper:
 
         if tool_args is None:
             tool_args = DEFAULT_TOOL_ARGS.copy()
-
+        print("TOOL AGRS", tool_args)
         tool_args = self._sanitize_tool_args(tool_args, limit)
         tool_args["user_id"] = user.id
 

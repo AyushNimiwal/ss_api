@@ -1,4 +1,3 @@
-import time
 from django.utils import timezone
 from django.conf import settings
 from google_auth_oauthlib.flow import Flow
@@ -121,17 +120,14 @@ class SSRecommander():
 
     def handle_onboarding_suggestions(self, user, **kwargs):
         limit = max(int(kwargs.get("limit", 10)), 1)
-        start_time = time.time()
         resp, status = self.yt_data_helper.get_user_yt_data(user)
         if not status:
             return {"code": 400, "message": resp.get('message')}, 200
-        print("USER DATA TIME", time.time()- start_time)
         usr_cnt_data = self._build_user_feedback_data(user)
         resp, status = self.movie_data_helper.get_movie_suggesstion(
             user, resp, usr_cnt_data, limit)
         if not status:
             return {"code": 400, "message": resp.get('message')}, 200
-        print("RESPONSE", time.time()- start_time)
         if len(resp) == 0:
             resp, status = self.get_usr_contents(user, limit)
             if not status:

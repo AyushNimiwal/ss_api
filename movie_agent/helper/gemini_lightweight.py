@@ -1,25 +1,29 @@
 import os
 import requests
 
-
 class GeminiLightClient:
-    def __init__(self, model="gemini-2.5-flash"):
+    def __init__(self, model="gemini-2.5-flash-lite"):
         self.api_key = os.getenv("GOOGLE_API_KEY")
         self.model = model
-        self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateText?key={self.api_key}"
+        self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
         self.session = requests.Session()
 
-    def generate(self, prompt, temperature=1):
+    def generate(self, prompt, temperature=0.2):
         body = {
-            "prompt": {"text": prompt},
-            "temperature": temperature,
-            "maxOutputTokens": 512
+            "contents": [
+                {"parts": [{"text": prompt}]}
+            ],
+            "generationConfig": {
+                "temperature": temperature,
+                "maxOutputTokens": 512
+            }
         }
 
-        res = self.session.post(self.url, json=body, timeout=8)
+        res = self.session.post(self.url, json=body, timeout=12)
         data = res.json()
 
         try:
-            return data["candidates"][0]["output"]
-        except:
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            print("PARSE ERR:", e)
             return "{}"

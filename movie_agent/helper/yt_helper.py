@@ -46,18 +46,20 @@ class YoutubeDataHelper():
         creds = self.get_yt_creds(user)
         self.yt_manager.set_credentials(creds)
         subs = self.yt_manager.subscriptions_list()
-        subs_str = ""
-        for subscription in subs:
-            channel_title = subscription['snippet']['title']
-            channel_description = subscription['snippet']['description'][:150]
-            subs_str += "\n".join(
-                f"Title: {channel_title} | Description: {channel_description}")
-        resp, status = self.analyse_and_extract_facts_from_data(user, subs_str)
+        subs_clean = [
+            {
+                "title": s["snippet"]["title"],
+                "desc": s["snippet"]["description"][:150]
+            }
+            for s in subs
+        ]
+        yt_str = json.dumps(subs_clean, separators=(",", ":"))
+        resp, status = self.analyse_and_extract_facts_from_data(yt_str)
         if not status:
             return {"code": 400, "message": resp.get('message')}, False
         return resp, True
 
-    def analyse_and_extract_facts_from_data(self, user, data):
+    def analyse_and_extract_facts_from_data(self, data):
         prompt = f"""
             You are specially programmed for identifing user favouraible area of interest
             using users subscription data of youtube
@@ -79,6 +81,7 @@ class YoutubeDataHelper():
             {"role": "user", "content": prompt}
         ]
         res, status = self.ai_model_provider.get_ai_response(messages)
+        res = res.strip().replace("```json", "").replace("```", "").strip()
         if not status:
             return res, False
         return res, True

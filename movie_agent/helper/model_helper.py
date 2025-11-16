@@ -5,12 +5,8 @@ class AIModelProvider:
         self.gemini = GeminiLightClient()
 
     def get_ai_response(self, messages):
-        prompt = ""
-        for m in messages:
-            role = "User" if m["role"] == "user" else "System"
-            prompt += f"{role}: {m['content']}\n"
-
-        prompt += "\nReturn ONLY pure JSON."
+        prompt = "\n".join(m["content"] for m in messages)
+        prompt += "\n\nRespond ONLY with valid JSON matching the schema. No explanations."
 
         text = self.gemini.generate(prompt)
 
